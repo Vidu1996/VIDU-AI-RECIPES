@@ -1,0 +1,511 @@
+
+base = "/mnt/agents/output/recipegen-ai"
+import os
+os.makedirs(base, exist_ok=True)
+
+# ============================================================
+# index.html
+# ============================================================
+html = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecipeGen AI — Turn Ingredients Into Delicious Recipes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-content">
+      <div class="chef-hat">👨‍🍳</div>
+      <h3>Cooking up your recipe...</h3>
+      <p>Our AI chef is working its magic</p>
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo" onclick="scrollToSection('hero')">
+        <span class="logo-icon">🍳</span>
+        <span class="logo-text">RecipeGen <span class="logo-ai">AI</span></span>
+      </a>
+      <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#hero" onclick="scrollToSection('hero')">Home</a></li>
+        <li><a href="#generator" onclick="scrollToSection('generator')">Generate</a></li>
+        <li><a href="#explore" onclick="scrollToSection('explore')">Explore</a></li>
+        <li><a href="#saved" onclick="scrollToSection('saved')">Saved</a></li>
+        <li><a href="#about" onclick="scrollToSection('about')">About</a></li>
+        <li>
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-pattern"></div>
+      <div class="hero-glow hero-glow-1"></div>
+      <div class="hero-glow hero-glow-2"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Powered by Advanced AI
+      </div>
+      <h1 class="hero-title">
+        Turn Your Ingredients<br>
+        Into <span class="gradient-text">Delicious Recipes</span>
+      </h1>
+      <p class="hero-subtitle">
+        Let AI create a personalized recipe using the ingredients you already have.
+        No more staring at your fridge wondering what to cook.
+      </p>
+      <div class="hero-cta">
+        <button class="btn btn-primary btn-lg" onclick="scrollToSection('generator')">
+          <span>✨</span> Generate Recipe
+        </button>
+        <button class="btn btn-ghost btn-lg" onclick="scrollToSection('explore')">
+          Explore Recipes
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">10K+</span>
+          <span class="stat-label">Recipes Generated</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-number">50+</span>
+          <span class="stat-label">Cuisines</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Free to Use</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-card card-1">
+        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop" alt="Salad">
+        <div class="card-info">
+          <span class="card-tag">Healthy</span>
+          <span class="card-time">⏱ 15 min</span>
+        </div>
+      </div>
+      <div class="floating-card card-2">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&h=200&fit=crop" alt="Pizza">
+        <div class="card-info">
+          <span class="card-tag">Italian</span>
+          <span class="card-time">⏱ 30 min</span>
+        </div>
+      </div>
+      <div class="floating-card card-3">
+        <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&h=200&fit=crop" alt="Pancakes">
+        <div class="card-info">
+          <span class="card-tag">Breakfast</span>
+          <span class="card-time">⏱ 20 min</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Generator Section -->
+  <section class="generator" id="generator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">AI Recipe Generator</span>
+        <h2 class="section-title">What Do You Have in Your Kitchen?</h2>
+        <p class="section-desc">Enter your ingredients and preferences, and our AI will craft the perfect recipe for you.</p>
+      </div>
+
+      <div class="generator-layout">
+        <!-- Form -->
+        <div class="generator-form-wrapper">
+          <form class="generator-form" id="recipe-form" onsubmit="handleGenerate(event)">
+            <!-- Ingredients -->
+            <div class="form-group">
+              <label for="ingredients">
+                <span class="form-icon">🥕</span>
+                Ingredients
+                <span class="required">*</span>
+              </label>
+              <textarea
+                id="ingredients"
+                name="ingredients"
+                rows="3"
+                placeholder="Example: chicken, rice, onion, garlic, tomato"
+                required
+              ></textarea>
+              <span class="form-hint">Separate ingredients with commas</span>
+            </div>
+
+            <div class="form-row">
+              <!-- Cuisine -->
+              <div class="form-group">
+                <label for="cuisine">
+                  <span class="form-icon">🌍</span>
+                  Cuisine
+                </label>
+                <div class="select-wrapper">
+                  <select id="cuisine" name="cuisine">
+                    <option value="any">Any</option>
+                    <option value="Sri Lankan">Sri Lankan</option>
+                    <option value="Indian">Indian</option>
+                    <option value="Italian">Italian</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="Mexican">Mexican</option>
+                    <option value="American">American</option>
+                    <option value="Thai">Thai</option>
+                    <option value="French">French</option>
+                    <option value="Mediterranean">Mediterranean</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Dietary Preference -->
+              <div class="form-group">
+                <label for="dietary">
+                  <span class="form-icon">🥗</span>
+                  Dietary Preference
+                </label>
+                <div class="select-wrapper">
+                  <select id="dietary" name="dietary">
+                    <option value="no preference">No Preference</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="high protein">High Protein</option>
+                    <option value="low carb">Low Carb</option>
+                    <option value="keto">Keto</option>
+                    <option value="gluten free">Gluten Free</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <!-- Cooking Time -->
+              <div class="form-group">
+                <label for="time">
+                  <span class="form-icon">⏱</span>
+                  Cooking Time
+                </label>
+                <div class="select-wrapper">
+                  <select id="time" name="time">
+                    <option value="any">Any</option>
+                    <option value="under 15 minutes">Under 15 minutes</option>
+                    <option value="15-30 minutes">15–30 minutes</option>
+                    <option value="30-60 minutes">30–60 minutes</option>
+                    <option value="60+ minutes">60+ minutes</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Difficulty -->
+              <div class="form-group">
+                <label for="difficulty">
+                  <span class="form-icon">📊</span>
+                  Difficulty
+                </label>
+                <div class="select-wrapper">
+                  <select id="difficulty" name="difficulty">
+                    <option value="any">Any</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <!-- Servings -->
+              <div class="form-group">
+                <label for="servings">
+                  <span class="form-icon">👥</span>
+                  Servings
+                </label>
+                <input
+                  type="number"
+                  id="servings"
+                  name="servings"
+                  min="1"
+                  max="20"
+                  value="2"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-generate">
+              <span class="btn-icon">✨</span>
+              <span>Generate Recipe with AI</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Recipe Result -->
+        <div class="recipe-result-wrapper" id="recipe-result-wrapper">
+          <div class="recipe-placeholder" id="recipe-placeholder">
+            <div class="placeholder-icon">🍽️</div>
+            <h3>Your Recipe Will Appear Here</h3>
+            <p>Fill in the form and click "Generate Recipe" to see the magic happen.</p>
+          </div>
+          <div class="recipe-card hidden" id="recipe-card"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Explore Section -->
+  <section class="explore" id="explore">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Explore</span>
+        <h2 class="section-title">Discover Recipes by Category</h2>
+        <p class="section-desc">Browse our curated collection of recipe categories to find your next meal.</p>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          id="explore-search"
+          placeholder="Search recipes by name, ingredient, or cuisine..."
+          oninput="handleExploreSearch()"
+        />
+      </div>
+
+      <!-- Categories -->
+      <div class="categories-grid" id="categories-grid">
+        <div class="category-card" data-category="Sri Lankan" onclick="filterByCategory('Sri Lankan')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400&h=300&fit=crop" alt="Sri Lankan">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🍛</span>
+            <h4>Sri Lankan</h4>
+            <span class="category-count">12 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="High Protein" onclick="filterByCategory('High Protein')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=300&fit=crop" alt="High Protein">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🍗</span>
+            <h4>High Protein</h4>
+            <span class="category-count">18 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="Healthy" onclick="filterByCategory('Healthy')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop" alt="Healthy">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🥗</span>
+            <h4>Healthy</h4>
+            <span class="category-count">24 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="Italian" onclick="filterByCategory('Italian')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&h=300&fit=crop" alt="Italian">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🍝</span>
+            <h4>Italian</h4>
+            <span class="category-count">15 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="Asian" onclick="filterByCategory('Asian')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&h=300&fit=crop" alt="Asian">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🍜</span>
+            <h4>Asian</h4>
+            <span class="category-count">20 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="Desserts" onclick="filterByCategory('Desserts')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&h=300&fit=crop" alt="Desserts">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🍰</span>
+            <h4>Desserts</h4>
+            <span class="category-count">16 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="Breakfast" onclick="filterByCategory('Breakfast')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1533089862017-5614ec95e214?w=400&h=300&fit=crop" alt="Breakfast">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">🍳</span>
+            <h4>Breakfast</h4>
+            <span class="category-count">14 recipes</span>
+          </div>
+        </div>
+        <div class="category-card" data-category="Quick Meals" onclick="filterByCategory('Quick Meals')">
+          <div class="category-img">
+            <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=300&fit=crop" alt="Quick Meals">
+          </div>
+          <div class="category-overlay">
+            <span class="category-emoji">⚡</span>
+            <h4>Quick Meals</h4>
+            <span class="category-count">22 recipes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explore Recipes Grid -->
+      <div class="explore-recipes" id="explore-recipes"></div>
+    </div>
+  </section>
+
+  <!-- Saved Recipes Section -->
+  <section class="saved" id="saved">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Your Collection</span>
+        <h2 class="section-title">Saved Recipes</h2>
+        <p class="section-desc">All your favorite AI-generated recipes, saved for later.</p>
+      </div>
+      <div class="saved-grid" id="saved-grid">
+        <div class="empty-state" id="saved-empty">
+          <div class="empty-icon">📚</div>
+          <h3>No Saved Recipes Yet</h3>
+          <p>Generate a recipe and click "Save Recipe" to add it to your collection.</p>
+          <button class="btn btn-primary" onclick="scrollToSection('generator')">
+            Generate Your First Recipe
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-visual">
+          <div class="about-img-main">
+            <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=600&fit=crop" alt="Cooking">
+          </div>
+          <div class="about-floating about-floating-1">
+            <span>🤖</span>
+            <p>AI-Powered</p>
+          </div>
+          <div class="about-floating about-floating-2">
+            <span>⚡</span>
+            <p>Instant Results</p>
+          </div>
+        </div>
+        <div class="about-content">
+          <span class="section-tag">About RecipeGen AI</span>
+          <h2 class="section-title">Cooking Made Simple with Artificial Intelligence</h2>
+          <p class="about-text">
+            RecipeGen AI uses advanced language models to create personalized recipes based on the ingredients 
+            you already have. No more food waste, no more "what's for dinner?" stress.
+          </p>
+          <div class="features-list">
+            <div class="feature-item">
+              <div class="feature-icon">🧠</div>
+              <div class="feature-info">
+                <h4>Smart Ingredient Matching</h4>
+                <p>Our AI prioritizes your available ingredients while suggesting minimal extras.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🥗</div>
+              <div class="feature-info">
+                <h4>Dietary Conscious</h4>
+                <p>Respects vegetarian, vegan, keto, gluten-free, and other dietary preferences.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🌍</div>
+              <div class="feature-info">
+                <h4>Global Cuisines</h4>
+                <p>From Sri Lankan to Italian, explore recipes from around the world.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">💾</div>
+              <div class="feature-info">
+                <h4>Save & Share</h4>
+                <p>Save your favorite recipes locally and share them with friends and family.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo" onclick="scrollToSection('hero')">
+            <span class="logo-icon">🍳</span>
+            <span class="logo-text">RecipeGen <span class="logo-ai">AI</span></span>
+          </a>
+          <p>Turn your ingredients into delicious recipes with the power of AI.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Navigate</h4>
+          <ul>
+            <li><a href="#hero" onclick="scrollToSection('hero')">Home</a></li>
+            <li><a href="#generator" onclick="scrollToSection('generator')">Generate</a></li>
+            <li><a href="#explore" onclick="scrollToSection('explore')">Explore</a></li>
+            <li><a href="#saved" onclick="scrollToSection('saved')">Saved</a></li>
+          </ul>
+        </div>
+        <div class="footer-links">
+          <h4>Categories</h4>
+          <ul>
+            <li><a href="#" onclick="filterByCategory('Healthy'); return false;">Healthy</a></li>
+            <li><a href="#" onclick="filterByCategory('Quick Meals'); return false;">Quick Meals</a></li>
+            <li><a href="#" onclick="filterByCategory('High Protein'); return false;">High Protein</a></li>
+            <li><a href="#" onclick="filterByCategory('Vegetarian'); return false;">Vegetarian</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>RecipeGen AI — Built with ❤️ and AI. Free for everyone.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>'''
+
+with open(f"{base}/index.html", "w") as f:
+    f.write(html)
+
+print("index.html created successfully!")
